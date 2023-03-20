@@ -37,9 +37,11 @@ import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.collection.DependencyCollectionException;
 import org.eclipse.aether.collection.DependencySelector;
 import org.eclipse.aether.graph.DependencyNode;
+import org.eclipse.aether.graph.DependencyVisitor;
 import org.eclipse.aether.util.graph.manager.DependencyManagerUtils;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.transformer.ConflictResolver;
+import org.eclipse.aether.util.graph.visitor.TreeDependencyVisitor;
 
 import static java.util.Optional.ofNullable;
 
@@ -132,5 +134,37 @@ class ResolveUtil {
         } catch (DependencyCollectionException e) {
             throw new EnforcerRuleException("Could not build dependency tree " + e.getLocalizedMessage(), e);
         }
+    }
+
+    /**
+     * Dump a {@link DependencyNode} as a tree.
+     *
+     * @param rootNode node to inspect
+     * @return dependency tree as String
+     */
+    public CharSequence dumpTree(DependencyNode rootNode) {
+        StringBuilder result = new StringBuilder(System.lineSeparator());
+
+        rootNode.accept(new TreeDependencyVisitor(new DependencyVisitor() {
+            String indent = "";
+
+            @Override
+            public boolean visitEnter(org.eclipse.aether.graph.DependencyNode dependencyNode) {
+                result.append(indent);
+                result.append("Node: ").append(dependencyNode);
+                result.append(" data map: ").append(dependencyNode.getData());
+                result.append(System.lineSeparator());
+                indent += "  ";
+                return true;
+            }
+
+            @Override
+            public boolean visitLeave(org.eclipse.aether.graph.DependencyNode dependencyNode) {
+                indent = indent.substring(0, indent.length() - 2);
+                return true;
+            }
+        }));
+
+        return result;
     }
 }

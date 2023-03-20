@@ -79,6 +79,7 @@ public final class DependencyConvergence extends AbstractStandardEnforcerRule {
                 getConvergenceErrorMsgs(dependencyVersionMap.getConflictedVersionNumbers(includes, excludes));
 
         if (!errorMsgs.isEmpty()) {
+            getLog().debug(() -> resolveUtil.dumpTree(node));
             throw new EnforcerRuleException("Failed while enforcing releasability." + System.lineSeparator()
                     + String.join(System.lineSeparator(), errorMsgs));
         }
